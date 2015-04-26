@@ -65,7 +65,6 @@ static void down_click_handler(ClickRecognizerRef recognizer, void *context) {
     foreground_color = GColorWhite;
   }
   
-  Layer *window_layer = window_get_root_layer(window);
   window_set_background_color(window, background_color);
   layer_mark_dirty(layer);
 }
