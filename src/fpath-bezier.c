@@ -6,10 +6,12 @@
 #define BENCHMARK false
 #define MAX_DEMO_PATHS 4
 
-static const int rot_step = TRIG_MAX_ANGLE / 360 * 5;
+static const int rot_step = TRIG_MAX_ANGLE / 360;
 static Window *window;
 static Layer *layer;
-static GPath *s_path;
+static GPath *s_gpath;
+static FPath *s_fpath;
+static FContext s_fctx;
 static uint8_t path_switcher = 0;
 static bool draw_line_switcher = false;
 #ifdef PBL_COLOR
@@ -23,8 +25,9 @@ static GColor background_color;
 static void prv_create_path(void);
 
 static void app_timer_callback(void *data) {
-  if (s_path) {
-    s_path->rotation = (s_path->rotation + rot_step) % TRIG_MAX_ANGLE;
+  if (s_gpath) {
+    s_gpath->rotation = (s_gpath->rotation + rot_step) % TRIG_MAX_ANGLE;
+    s_fpath->rotation = s_gpath->rotation;
     layer_mark_dirty(layer);
   }
   
@@ -32,13 +35,19 @@ static void app_timer_callback(void *data) {
 }
 
 static void update_layer(struct Layer *layer, GContext *ctx) {
-  graphics_context_set_stroke_color(ctx, foreground_color);
-  graphics_context_set_fill_color(ctx, foreground_color);
 
   if (draw_line_switcher) {
-    gpath_draw_outline(ctx, s_path);
+    if (NULL == s_fctx.gctx) {
+      fpath_init_context(&s_fctx, ctx);
+    }
+    fpath_set_stroke_color(&s_fctx, background_color);
+    fpath_set_fill_color(&s_fctx, foreground_color);
+    fpath_begin_fill(&s_fctx);
+    fpath_draw_filled(&s_fctx, s_fpath);
+    fpath_end_fill(&s_fctx);
   } else {
-    gpath_draw_filled(ctx, s_path);
+    graphics_context_set_fill_color(ctx, foreground_color);
+    gpath_draw_filled(ctx, s_gpath);
   }
 }
 
@@ -76,65 +85,70 @@ static void click_config_provider(void *context) {
 }
 
 static void prv_create_path() {
-  if (s_path) {
-    gpath_destroy(s_path);
+  if (s_gpath) {
+    gpath_destroy(s_gpath);
   }
-
+  if (s_fpath) {
+    fpath_destroy(s_fpath);
+  }
+  
 #if BENCHMARK
   time_t start = time(NULL);
   uint16_t start_ms = time_ms(NULL, NULL);
 #endif
-
-  GPathBuilder *builder = gpath_builder_create(MAX_POINTS);
+  
+  FPathBuilder *builder = fpath_builder_create(MAX_POINTS);
   
   switch (path_switcher) {
   case 0:
-    gpath_builder_move_to_point(builder, GPoint(-15, -15));
-    gpath_builder_curve_to_point(builder, GPoint(15, -15), GPoint(-15, -60), GPoint(15, -60));
-    gpath_builder_curve_to_point(builder, GPoint(15, 15), GPoint(60, -15), GPoint(60, 15));
-    gpath_builder_curve_to_point(builder, GPoint(-15, 15), GPoint(15, 60), GPoint(-15, 60));
-    gpath_builder_curve_to_point(builder, GPoint(-15, -15), GPoint(-60, 15), GPoint(-60, -15));
-    break;
+      fpath_builder_move_to_point (builder, FPointI(-15, -15));
+      fpath_builder_curve_to_point(builder, FPointI( 15, -15), FPointI(-15, -60), FPointI( 15, -60));
+      fpath_builder_curve_to_point(builder, FPointI( 15,  15), FPointI( 60, -15), FPointI( 60,  15));
+      fpath_builder_curve_to_point(builder, FPointI(-15,  15), FPointI( 15,  60), FPointI(-15,  60));
+      fpath_builder_curve_to_point(builder, FPointI(-15, -15), FPointI(-60,  15), FPointI(-60, -15));
+      break;
   case 1:
-    gpath_builder_move_to_point(builder, GPoint(-20, -50));
-    gpath_builder_curve_to_point(builder, GPoint(20, -50), GPoint(-25, -60), GPoint(25, -60));
-    gpath_builder_curve_to_point(builder, GPoint(20, 50), GPoint(0, 0), GPoint(0, 0));
-    gpath_builder_curve_to_point(builder, GPoint(-20, 50), GPoint(25, 60), GPoint(-25, 60));
-    gpath_builder_curve_to_point(builder, GPoint(-20, -50), GPoint(0, 0), GPoint(0, 0));
-    break;
+      fpath_builder_move_to_point (builder, FPointI(-20, -50));
+      fpath_builder_curve_to_point(builder, FPointI( 20, -50), FPointI(-25, -60), FPointI( 25, -60));
+      fpath_builder_curve_to_point(builder, FPointI( 20,  50), FPointI(  0,   0), FPointI(  0,   0));
+      fpath_builder_curve_to_point(builder, FPointI(-20,  50), FPointI( 25,  60), FPointI(-25,  60));
+      fpath_builder_curve_to_point(builder, FPointI(-20, -50), FPointI(  0,   0), FPointI(  0,   0));
+      break;
   case 2:
-    gpath_builder_move_to_point(builder, GPoint(0, -60));
-    gpath_builder_curve_to_point(builder, GPoint(60, 0), GPoint(35, -60), GPoint(60, -35));
-    gpath_builder_curve_to_point(builder, GPoint(0, 60), GPoint(60, 35), GPoint(35, 60));
-    gpath_builder_curve_to_point(builder, GPoint(0, 0), GPoint(-50, 60), GPoint(-50, 0));
-    gpath_builder_curve_to_point(builder, GPoint(0, -60), GPoint(50, 0), GPoint(50, -60));
-    break;
+      fpath_builder_move_to_point (builder, FPointI(  0, -60));
+      fpath_builder_curve_to_point(builder, FPointI( 60,   0), FPointI( 35, -60), FPointI( 60, -35));
+      fpath_builder_curve_to_point(builder, FPointI(  0,  60), FPointI( 60,  35), FPointI( 35,  60));
+      fpath_builder_curve_to_point(builder, FPointI(  0,   0), FPointI(-50,  60), FPointI(-50,   0));
+      fpath_builder_curve_to_point(builder, FPointI(  0, -60), FPointI( 50,   0), FPointI( 50, -60));
+      break;
   case 3:
-    gpath_builder_move_to_point(builder, GPoint(0, -60));
-    gpath_builder_curve_to_point(builder, GPoint(60, 0), GPoint(35, -60), GPoint(60, -35));
-    gpath_builder_line_to_point(builder, GPoint(-60, 0));
-    gpath_builder_curve_to_point(builder, GPoint(0, 60), GPoint(-60, 35), GPoint(-35, 60));
-    gpath_builder_line_to_point(builder, GPoint(0, -60));
-    break;
+      fpath_builder_move_to_point (builder, FPointI(  0, -60));
+      fpath_builder_curve_to_point(builder, FPointI( 60,   0), FPointI( 35, -60), FPointI( 60, -35));
+      fpath_builder_line_to_point (builder, FPointI(-60,   0));
+      fpath_builder_curve_to_point(builder, FPointI(  0,  60), FPointI(-60,  35), FPointI(-35,  60));
+      fpath_builder_line_to_point (builder, FPointI(  0, -60));
+      break;
   default:
-    APP_LOG(APP_LOG_LEVEL_ERROR, "Invalid demo path id: %d", path_switcher);
+      APP_LOG(APP_LOG_LEVEL_ERROR, "Invalid demo path id: %d", path_switcher);
   }
-
-
-  s_path = gpath_builder_create_path(builder);
-  gpath_builder_destroy(builder);
-
+  
+  
+  s_fpath = fpath_builder_create_path(builder);
+  s_gpath = fpath_builder_create_gpath(builder);
+  fpath_builder_destroy(builder);
+  
 #if BENCHMARK
   time_t end = time(NULL);
   uint16_t end_ms = time_ms(NULL, NULL);
 #endif
   
   GRect bounds = layer_get_bounds(window_get_root_layer(window));
-  gpath_move_to(s_path, GPoint((int16_t)(bounds.size.w/2), (int16_t)(bounds.size.h/2)));
+  gpath_move_to(s_gpath, GPoint((int16_t)(bounds.size.w/2), (int16_t)(bounds.size.h/2)));
+  fpath_move_to(s_fpath, FPointI((int16_t)(bounds.size.w/2), (int16_t)(bounds.size.h/2)));
 
 #if BENCHMARK
   int total = (end - start) * 1000 + end_ms - start_ms;
-  APP_LOG(APP_LOG_LEVEL_DEBUG, "building took %d ms (%d points)", total, (int)s_path->num_points);
+  APP_LOG(APP_LOG_LEVEL_DEBUG, "building took %d ms (%d points)", total, (int)s_fpath->num_points);
 #endif
 }
 
@@ -156,7 +170,8 @@ static void window_load(Window *window) {
 }
 
 static void window_unload(Window *window) {
-  gpath_destroy(s_path);
+  gpath_destroy(s_gpath);
+  fpath_destroy(s_fpath);
   layer_destroy(layer);
 }
 
@@ -172,6 +187,7 @@ static void init(void) {
 }
 
 static void deinit(void) {
+  fpath_deinit_context(&s_fctx);
   window_destroy(window);
 }
 
