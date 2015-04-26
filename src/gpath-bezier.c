@@ -6,10 +6,6 @@
 #define BENCHMARK false
 #define MAX_DEMO_PATHS 4
 
-#ifndef PBL_PLATFORM_BASALT
-#define GColorEq(c1,c2) ((c1)==(c2))
-#endif
-
 static const int rot_step = TRIG_MAX_ANGLE / 360 * 5;
 static Window *window;
 static Layer *layer;
