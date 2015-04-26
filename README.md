@@ -4,6 +4,12 @@ This is a fork of [pebble-hacks/gpath-bezier](https://github.com/pebble-hacks/gp
 It adds support for subpixel accurate rendering of filled paths.  Additionally, on color
 Pebble devices, antialiasing is supported.
 
+The UP button now switches between the native GPath rendering and the new FPath rendering
+for comparison.  Also, the rotation rate has been slowed considerably to make it easier to
+see just how effective the subpixel accuracy is at smoothing both the shape and the animation.
+
+Written against the PebbleSDK v3.0-dp8
+
 The interesting parts are derived from the following excellent resources:
 
 *Perspective Texture Mapping*
