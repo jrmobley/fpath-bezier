@@ -1,5 +1,5 @@
 #include <pebble.h>
-#include "gpath_builder.h"
+#include "fpath_builder.h"
 
 #define MAX_POINTS 256
 #define DRAW_LINE false
