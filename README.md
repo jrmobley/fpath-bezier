@@ -1,3 +1,29 @@
+# fpath-bezier
+
+This is a fork of [pebble-hacks/gpath-bezier](https://github.com/pebble-hacks/gpath-bezier).
+It adds support for subpixel accurate rendering of filled paths.  Additionally, on color
+Pebble devices, antialiasing is supported.
+
+The interesting parts are derived from the following excellent resources:
+
+*Perspective Texture Mapping*
+Game Developer Magazine
+Chris Hecker
+Copyright (c) 1995-1997 Chris Hecker. All rights reserved.
+[http://chrishecker.com/Miscellaneous_Technical_Articles](http://chrishecker.com/Miscellaneous_Technical_Articles)
+
+*Scanline edge-flag algorithm for antialiasing*
+EG UK Theory and Practice of Computer Graphics (2007)
+Kiia Kallio
+Copyright (c) 2005-2007 Kiia Kallio <kkallio@uiah.fi>
+[http://mlab.uiah.fi/~kkallio/antialiasing/](http://mlab.uiah.fi/~kkallio/antialiasing/)
+
+*The Edge Flag Algorithm--A Fill Method for Raster Scan Displays*
+IEEE Transactions On Computers, Volume C-30, No. 1, January 1981.
+Bryan D. Ackland and Neil H. Weste
+
+The original README for pebble-hacks/gpath-bezier follows:
+
 # gpath-bezier
 
 Drawing complex paths requires a lot of manual work on Pebble. You can do this
