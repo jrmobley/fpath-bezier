@@ -63,6 +63,7 @@ void fpath_set_fill_color(FContext* fctx, GColor c);
 void fpath_set_stroke_color(FContext* fctx, GColor c);
 #ifdef PBL_COLOR
 void fpath_enable_aa(bool enable);
+bool fpath_is_aa_enabled();
 #endif
 
 typedef void (*fpath_init_context_func)(FContext* fctx, GContext* gctx);

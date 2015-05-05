@@ -13,7 +13,7 @@ static GPath *s_gpath;
 static FPath *s_fpath;
 static FContext s_fctx;
 static uint8_t path_switcher = 0;
-static bool draw_line_switcher = false;
+static enum {DRAW_GPATH, DRAW_FPATH_BW, DRAW_FPATH_AA} draw_line_switcher = DRAW_GPATH;
 #ifdef PBL_COLOR
 static GColor8 foreground_color;
 static GColor8 background_color;
@@ -36,24 +36,43 @@ static void app_timer_callback(void *data) {
 
 static void update_layer(struct Layer *layer, GContext *ctx) {
 
-  if (draw_line_switcher) {
+  if (DRAW_GPATH == draw_line_switcher) {
+
+    graphics_context_set_fill_color(ctx, foreground_color);
+    gpath_draw_filled(ctx, s_gpath);
+
+  } else {
+
+#ifdef PBL_COLOR
+    bool is_aa = fpath_is_aa_enabled();
+    if (is_aa && DRAW_FPATH_BW == draw_line_switcher) {
+      fpath_deinit_context(&s_fctx);
+      fpath_enable_aa(false);
+    } else if (!is_aa && DRAW_FPATH_AA == draw_line_switcher) {
+      fpath_deinit_context(&s_fctx);
+      fpath_enable_aa(true);
+    }
+#endif
+
     if (NULL == s_fctx.gctx) {
       fpath_init_context(&s_fctx, ctx);
     }
+
     fpath_set_stroke_color(&s_fctx, background_color);
     fpath_set_fill_color(&s_fctx, foreground_color);
     fpath_begin_fill(&s_fctx);
     fpath_draw_filled(&s_fctx, s_fpath);
     fpath_end_fill(&s_fctx);
-  } else {
-    graphics_context_set_fill_color(ctx, foreground_color);
-    gpath_draw_filled(ctx, s_gpath);
   }
 }
 
 static void up_click_handler(ClickRecognizerRef recognizer, void *context) {
   //text_layer_set_text(text_layer, "Up");
-  draw_line_switcher = !draw_line_switcher;
+#ifdef PBL_COLOR
+  draw_line_switcher = (draw_line_switcher + 1) % 3;
+#else
+  draw_line_switcher = (draw_line_switcher + 1) % 2;
+#endif
   layer_mark_dirty(layer);
 }
 
@@ -66,7 +85,7 @@ static void select_click_handler(ClickRecognizerRef recognizer, void *context) {
 
 static void down_click_handler(ClickRecognizerRef recognizer, void *context) {
   //text_layer_set_text(text_layer, "Down");
-  if (GColorEq(background_color, GColorBlack)) {
+  if (gcolor_equal(background_color, GColorBlack)) {
     background_color = GColorWhite;
     foreground_color = GColorBlack;
   } else {

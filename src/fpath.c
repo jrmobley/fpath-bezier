@@ -1,6 +1,5 @@
 
 #include "fpath.h"
-#include "basalt-compatibility.h"
 #include <stdlib.h>
 
 /*
@@ -147,7 +146,7 @@ void fpath_init_context_bw(FContext* fctx, GContext* gctx) {
 		
 		bounds.size.w += 1;
 		bounds.size.h += 1;
-		fctx->flagBuffer = gbitmap_create_1bit(bounds.size);
+		fctx->flagBuffer = gbitmap_create_blank(bounds.size, GBitmapFormat1Bit);
 
 		fctx->gctx = gctx;
 	}
@@ -229,7 +228,7 @@ void fpath_end_fill_bw(FContext* fctx) {
 #ifdef PBL_COLOR
 	uint8_t color = fctx->fillColor.argb;
 #else
-	uint8_t color = GColorEq(fctx->fillColor, GColorWhite) ? 0xff : 0x00;
+	uint8_t color = gcolor_equal(fctx->fillColor, GColorWhite) ? 0xff : 0x00;
 #endif
 
 	uint16_t rowBegin = FIXED_TO_INT(fctx->min.y);
@@ -280,8 +279,10 @@ void fpath_end_fill_bw(FContext* fctx) {
 }
 
 void fpath_deinit_context_bw(FContext* fctx) {
-	gbitmap_destroy(fctx->flagBuffer);
-	fctx->gctx = NULL;
+	if (fctx->gctx) {
+		gbitmap_destroy(fctx->flagBuffer);
+		fctx->gctx = NULL;
+	}
 }
 
 // --------------------------------------------------------------------------
@@ -509,6 +510,10 @@ void fpath_enable_aa(bool enable) {
 		fpath_end_fill       = &fpath_end_fill_bw;
 		fpath_deinit_context = &fpath_deinit_context_bw;
 	}
+}
+
+bool fpath_is_aa_enabled() {
+	return fpath_init_context == &fpath_init_context_aa;
 }
 
 #else
