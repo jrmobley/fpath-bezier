@@ -8,7 +8,7 @@ The UP button now switches between the native GPath rendering and the new FPath 
 for comparison.  Also, the rotation rate has been slowed considerably to make it easier to
 see just how effective the subpixel accuracy is at smoothing both the shape and the animation.
 
-Written against the PebbleSDK v3.0-dp8
+Written against the PebbleSDK v3.0-beta10
 
 The interesting parts are derived from the following excellent resources:
 
