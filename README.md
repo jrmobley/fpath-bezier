@@ -1,5 +1,8 @@
 # fpath-bezier
 
+**NOTE** - This project is deprecated.  See [pebble-fctx](https://github.com/jrmobley/pebble-fctx) for
+the latest.
+
 This is a fork of [pebble-hacks/gpath-bezier](https://github.com/pebble-hacks/gpath-bezier).
 It adds support for subpixel accurate rendering of filled paths.  Additionally, on color
 Pebble devices, antialiasing is supported.
